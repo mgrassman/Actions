@@ -43,7 +43,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dotnet-app
-          path: out
+          path: ${{ inputs.project-name }}
      
       - name: Stop Websites belonging to ${{ inputs.app-pool }}
         uses: appleboy/ssh-action@master
@@ -70,7 +70,7 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           password: ${{ secrets.AZURE_VM_PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "out/*"
+          source: "${{ inputs.project-name }}/*"
           target: ${{ inputs.deployment-target }}
 
       - name: Start Websites belonging to ${{ inputs.app-pool }}
