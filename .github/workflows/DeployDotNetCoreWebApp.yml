@@ -6,7 +6,7 @@ on:
       project-name:
         required: true
         type: string
-      dotnet-versin:
+      dotnet-version:
         required: true
         type: string
       app-pool:
@@ -23,16 +23,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: ${{ inputs.DOTNET_VERSION }} # Specify the exact .NET version
+          dotnet-version: ${{ inputs.dotnet-version }} # Specify the exact .NET version
       - name: Build with dotnet
         run: dotnet build --configuration Release
       - name: Publish with dotnet
-        run: dotnet publish --configuration Release --output ${{ inputs.PROJECT_NAME }}
+        run: dotnet publish --configuration Release --output ${{ inputs.project-name }}
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
           name: dotnet-app
-          path: ${{ inputs.PROJECT_NAME }}/**
+          path: ${{ inputs.project-name }}/**
            
   deploy:
     needs: build
@@ -43,7 +43,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dotnet-app
-          path: ${{ inputs.PROJECT_NAME }}
+          path: ${{ inputs.project-name }}
      
       - name: Stop Website
         uses: appleboy/ssh-action@master
@@ -53,7 +53,7 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command "Stop-WebAppPool -Name ${{ inputs.APPPOOL }}"
+                powershell -Command "Stop-WebAppPool -Name ${{ inputs.app-pool }}"
 
       - name: Deploy to Azure VM via SSH
         uses: appleboy/scp-action@v0.1.4 # Use a tagged version
@@ -62,8 +62,8 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           password: ${{ secrets.AZURE_VM_PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "${{ inputs.PROJECT_NAME }}/*"
-          target: ${{ inputs.DEPLOYMENT_TARGET }}
+          source: "${{ inputs.project-name }}/*"
+          target: ${{ inputs.deployment-target }}
 
       - name: Start Website
         uses: appleboy/ssh-action@master
@@ -73,4 +73,4 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-              powershell -Command "Start-WebAppPool -Name ${{ inputs.APPPOOL }}"
+              powershell -Command "Start-WebAppPool -Name ${{ inputs.app-pool }}"
