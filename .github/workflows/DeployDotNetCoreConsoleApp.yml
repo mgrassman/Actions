@@ -41,17 +41,7 @@ jobs:
         with:
           name: dotnet-app
           path: published
-     
-      # - name: Stop Websites belonging to ${{ inputs.app-pool }}
-      #   uses: appleboy/ssh-action@master
-      #   with:
-      #       host: ${{ secrets.AZURE_VM_IP }}
-      #       username: ${{ secrets.AZURE_VM_USERNAME }}
-      #       password: ${{ secrets.AZURE_VM_PASSWORD }}
-      #       port: ${{ secrets.PORT }}
-      #       script: |
-      #           powershell -Command "if ((Get-WebAppPoolState -Name ${{ inputs.app-pool }}).Value -eq 'Started') { Stop-WebAppPool -Name ${{ inputs.app-pool }} }"
-      - name: Remove Previous File From ${{ inputs.deployment-target }}\*
+      - name: Remove Previous File From ${{ inputs.deployment-target }}
         uses: appleboy/ssh-action@master
         with:
             host: ${{ secrets.AZURE_VM_IP }}
@@ -59,7 +49,14 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command "Remove-Item -Path ${{ inputs.deployment-target }}\* -Recurse -Force"
+                powershell -Command 
+                "& {
+                   if (Test-Path -Path '${{ inputs.deployment-target }}') {
+                       Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force
+                   } else {
+                       Write-Host 'The path does not exist.'
+                   }
+                }"
       - name: Deploy to Azure VM via SSH to ${{ inputs.deployment-target }}\*
         uses: appleboy/scp-action@v0.1.4 # Use a tagged version
         with:
@@ -70,14 +67,3 @@ jobs:
           source: "published/*"
           target: ${{ inputs.deployment-target }}
           strip_components: 1
-          # rm: true
-
-      # - name: Start Websites belonging to ${{ inputs.app-pool }}
-      #   uses: appleboy/ssh-action@master
-      #   with:
-      #       host: ${{ secrets.AZURE_VM_IP }}
-      #       username: ${{ secrets.AZURE_VM_USERNAME }}
-      #       password: ${{ secrets.AZURE_VM_PASSWORD }}
-      #       port: ${{ secrets.PORT }}
-      #       script: |
-      #         powershell -Command "Start-WebAppPool -Name ${{ inputs.app-pool }}"
