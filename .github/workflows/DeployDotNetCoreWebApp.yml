@@ -20,13 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET
+      - name: Setup .NET ${{ inputs.dotnet-version }}
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: ${{ inputs.dotnet-version }} # Specify the exact .NET version
-      - name: Build with dotnet
+      - name: Build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj with dotnet
         run: dotnet build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release
-      - name: Publish with dotnet
+      - name: Publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj with dotnet
         run: dotnet publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release --output ${{ inputs.project-name }}
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
@@ -45,7 +45,7 @@ jobs:
           name: dotnet-app
           path: ${{ inputs.project-name }}
      
-      - name: Stop Website
+      - name: Stop Websites belonging to ${{ inputs.app-pool }}
         uses: appleboy/ssh-action@master
         with:
             host: ${{ secrets.AZURE_VM_IP }}
@@ -73,7 +73,7 @@ jobs:
           source: "${{ inputs.project-name }}/*"
           target: ${{ inputs.deployment-target }}
 
-      - name: Start Website
+      - name: Start Websites belonging to ${{ inputs.app-pool }}
         uses: appleboy/ssh-action@master
         with:
             host: ${{ secrets.AZURE_VM_IP }}
