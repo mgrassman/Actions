@@ -49,8 +49,7 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command 
-                "& {
+                powershell -Command "& {
                    if (Test-Path -Path '${{ inputs.deployment-target }}') {
                        Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force
                    } else {
