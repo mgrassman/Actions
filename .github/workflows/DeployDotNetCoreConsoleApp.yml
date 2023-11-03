@@ -49,11 +49,7 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command "& {
-                   if (Test-Path -Path '${{ inputs.deployment-target }}') {
-                       Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force
-                   }
-                }"
+                powershell -Command "& { if (Test-Path -Path '${{ inputs.deployment-target }}') { Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force } }"
       - name: Deploy to Azure VM via SSH to ${{ inputs.deployment-target }}\*
         uses: appleboy/scp-action@v0.1.4 # Use a tagged version
         with:
