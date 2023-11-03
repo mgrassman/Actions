@@ -25,9 +25,9 @@ jobs:
         with:
           dotnet-version: ${{ inputs.dotnet-version }} # Specify the exact .NET version
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release
       - name: Publish with dotnet
-        run: dotnet publish --configuration Release --output ${{ inputs.project-name }}
+        run: dotnet publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release --output ${{ inputs.project-name }}
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
