@@ -1,4 +1,4 @@
-name: DeployDotNetCoreWebApp
+name: BuildAndDeployDotNetCoreWebApp
 
 on:
   workflow_call:
@@ -18,36 +18,22 @@ on:
       unique-name:
         required: true
         type: string
+
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET ${{ inputs.dotnet-version }}
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: ${{ inputs.dotnet-version }} # Specify the exact .NET version
-      - name: Build ${{ inputs.project-path }} with dotnet
-        run: dotnet build ${{ inputs.project-path }} --configuration Release
-      - name: Publish ${{ inputs.project-path }} with dotnet
-        run: dotnet publish ${{ inputs.project-path }} --configuration Release --output publishedWebApp -p:DebugType=None /p:ExcludeFilesFromPublish=appsettings.Development.json -r win-x64
-      - name: Upload artifact for deployment
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ inputs.unique-name }}
-          path: publishedWebApp/**
-           
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ inputs.unique-name }}
-          path: publishedWebApp
-     
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Build and Publish ${{ inputs.project-path }} with dotnet
+        run: |
+          dotnet build ${{ inputs.project-path }} --configuration Release
+          dotnet publish ${{ inputs.project-path }} --configuration Release --output publishedWebApp
+
       - name: Stop Websites belonging to ${{ inputs.app-pool }}
         uses: appleboy/ssh-action@master
         with:
@@ -56,8 +42,9 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command "if ((Get-WebAppPoolState -Name ${{ inputs.app-pool }}).Value -eq 'Started') { Stop-WebAppPool -Name ${{ inputs.app-pool }} }"
-      - name: Remove Previous File From ${{ inputs.deployment-target }}
+              powershell -Command "if ((Get-WebAppPoolState -Name ${{ inputs.app-pool }}).Value -eq 'Started') { Stop-WebAppPool -Name ${{ inputs.app-pool }} }"
+
+      - name: Remove Previous Files From ${{ inputs.deployment-target }}
         uses: appleboy/ssh-action@master
         with:
             host: ${{ secrets.AZURE_VM_IP }}
@@ -65,9 +52,10 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command "& { if (Test-Path -Path '${{ inputs.deployment-target }}') { Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force } }"
-      - name: Deploy to Azure VM via SSH to ${{ inputs.deployment-target }}\*
-        uses: appleboy/scp-action@v0.1.4 # Use a tagged version
+              powershell -Command "& { if (Test-Path -Path '${{ inputs.deployment-target }}') { Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force } }"
+
+      - name: Deploy to Azure VM via SSH
+        uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.AZURE_VM_IP }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
