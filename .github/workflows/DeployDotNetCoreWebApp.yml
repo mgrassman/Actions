@@ -53,7 +53,7 @@ jobs:
             password: ${{ secrets.AZURE_VM_PASSWORD }}
             port: ${{ secrets.PORT }}
             script: |
-                powershell -Command "Stop-WebAppPool -Name ${{ inputs.app-pool }}"
+                powershell -Command "if ((Get-WebAppPoolState -Name ${{ inputs.app-pool }}).Value -eq 'Started') { Stop-WebAppPool -Name ${{ inputs.app-pool }} } else { Write-Host '${{ inputs.app-pool }} is already stopped.' }"
 
       - name: Deploy to Azure VM via SSH
         uses: appleboy/scp-action@v0.1.4 # Use a tagged version
