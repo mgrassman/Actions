@@ -65,8 +65,6 @@ jobs:
                 powershell -Command "& {
                    if (Test-Path -Path '${{ inputs.deployment-target }}') {
                        Remove-Item -Path '${{ inputs.deployment-target }}\*' -Recurse -Force
-                   } else {
-                       Write-Host 'The path does not exist.'
                    }
                 }"
       - name: Deploy to Azure VM via SSH to ${{ inputs.deployment-target }}\*
