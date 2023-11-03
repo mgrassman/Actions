@@ -27,12 +27,12 @@ jobs:
       - name: Build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj with dotnet
         run: dotnet build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release
       - name: Publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj with dotnet
-        run: dotnet publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release --output ${{ inputs.project-name }}out
+        run: dotnet publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release --output ${{ inputs.project-name }}
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
           name: dotnet-app
-          path: ${{ inputs.project-name }}out/**
+          path: ${{ inputs.project-name }}/**
            
   deploy:
     needs: build
@@ -43,7 +43,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dotnet-app
-          path: ${{ inputs.project-name }}out
+          path: ${{ inputs.project-name }}
      
       - name: Stop Websites belonging to ${{ inputs.app-pool }}
         uses: appleboy/ssh-action@master
@@ -70,7 +70,7 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           password: ${{ secrets.AZURE_VM_PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "${{ inputs.project-name }}out/*"
+          source: "${{ inputs.project-name }}/*"
           target: ${{ inputs.deployment-target }}
 
       - name: Start Websites belonging to ${{ inputs.app-pool }}
