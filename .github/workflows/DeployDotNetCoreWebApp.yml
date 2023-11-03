@@ -27,12 +27,12 @@ jobs:
       - name: Build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj with dotnet
         run: dotnet build ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release
       - name: Publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj with dotnet
-        run: dotnet publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release --output out
+        run: dotnet publish ./${{ inputs.project-name }}/${{ inputs.project-name }}.csproj --configuration Release --output ${{ inputs.project-name }}out
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
           name: dotnet-app
-          path: out/**
+          path: ${{ inputs.project-name }}out/**
            
   deploy:
     needs: build
@@ -43,7 +43,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dotnet-app
-          path: ${{ inputs.project-name }}
+          path: ${{ inputs.project-name }}out
      
       - name: Stop Websites belonging to ${{ inputs.app-pool }}
         uses: appleboy/ssh-action@master
@@ -63,14 +63,14 @@ jobs:
             port: ${{ secrets.PORT }}
             script: |
                 powershell -Command "Remove-Item -Path ${{ inputs.deployment-target }}${{ inputs.project-name }}\* -Recurse -Force"
-      - name: Deploy to Azure VM via SSH to ${{ inputs.deployment-target }}\${{ inputs.project-name }}\*
+      - name: Deploy to Azure VM via SSH to ${{ inputs.deployment-target }}\*
         uses: appleboy/scp-action@v0.1.4 # Use a tagged version
         with:
           host: ${{ secrets.AZURE_VM_IP }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
           password: ${{ secrets.AZURE_VM_PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "${{ inputs.project-name }}/*"
+          source: "${{ inputs.project-name }}out/*"
           target: ${{ inputs.deployment-target }}
 
       - name: Start Websites belonging to ${{ inputs.app-pool }}
