@@ -27,7 +27,7 @@ jobs:
       - name: Build ${{ inputs.project-path }} with dotnet
         run: dotnet build ${{ inputs.project-path }} --configuration Release
       - name: Publish ${{ inputs.project-path }} with dotnet
-        run: dotnet publish ${{ inputs.project-path }} --configuration Release --output publishedConsole
+        run: dotnet publish ${{ inputs.project-path }} --configuration Release --output publishedConsole --self-contained true -p:PublishSingleFile=true -r win-x64
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
