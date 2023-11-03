@@ -24,12 +24,12 @@ jobs:
       - name: Build ${{ inputs.project-path }} with dotnet
         run: dotnet build ${{ inputs.project-path }} --configuration Release
       - name: Publish ${{ inputs.project-path }} with dotnet
-        run: dotnet publish ${{ inputs.project-path }} --configuration Release --output published
+        run: dotnet publish ${{ inputs.project-path }} --configuration Release --output publishedConsole
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
           name: dotnet-app
-          path: published/**
+          path: publishedConsole/**
            
   deploy:
     needs: build
@@ -40,7 +40,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dotnet-app
-          path: published
+          path: publishedConsole
       - name: Remove Previous File From ${{ inputs.deployment-target }}
         uses: appleboy/ssh-action@master
         with:
@@ -57,6 +57,6 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           password: ${{ secrets.AZURE_VM_PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "published/*"
+          source: "publishedConsole/*"
           target: ${{ inputs.deployment-target }}
           strip_components: 1
