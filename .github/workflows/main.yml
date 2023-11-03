@@ -1,0 +1,65 @@
+name: DeployDotNetCoreWebApp
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: ${{ vars.DOTNET_VERSION }} # Specify the exact .NET version
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+      - name: Publish with dotnet
+        run: dotnet publish --configuration Release --output ${{ vars.PROJECT_NAME }}
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v3
+        with:
+          name: dotnet-app
+          path: ${{ vars.PROJECT_NAME }}/**
+           
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dotnet-app
+          path: ${{ vars.PROJECT_NAME }}
+     
+      - name: Stop Website
+        uses: appleboy/ssh-action@master
+        with:
+            host: ${{ secrets.AZURE_VM_IP }}
+            username: ${{ secrets.AZURE_VM_USERNAME }}
+            password: ${{ secrets.AZURE_VM_PASSWORD }}
+            port: ${{ secrets.PORT }}
+            script: |
+                powershell -Command "Stop-WebAppPool -Name ${{ vars.APPPOOL }}"
+
+      - name: Deploy to Azure VM via SSH
+        uses: appleboy/scp-action@v0.1.4 # Use a tagged version
+        with:
+          host: ${{ secrets.AZURE_VM_IP }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          password: ${{ secrets.AZURE_VM_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          source: "${{ vars.PROJECT_NAME }}/*"
+          target: ${{ vars.DEPLOYMENT_TARGET }}
+
+      - name: Start Website
+        uses: appleboy/ssh-action@master
+        with:
+            host: ${{ secrets.AZURE_VM_IP }}
+            username: ${{ secrets.AZURE_VM_USERNAME }}
+            password: ${{ secrets.AZURE_VM_PASSWORD }}
+            port: ${{ secrets.PORT }}
+            script: |
+              powershell -Command "Start-WebAppPool -Name ${{ vars.APPPOOL }}"
