@@ -12,6 +12,9 @@ on:
       deployment-target:
         required: true
         type: string
+      unique-name:
+        required: true
+        type: string
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
-          name: dotnet-app
+          name: ${{ inputs.unique-name }}
           path: publishedConsole/**
            
   deploy:
@@ -39,7 +42,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: dotnet-app
+          name: ${{ inputs.unique-name }}
           path: publishedConsole
       - name: Remove Previous File From ${{ inputs.deployment-target }}
         uses: appleboy/ssh-action@master
